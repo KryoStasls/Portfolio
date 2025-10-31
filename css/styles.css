@@ -682,11 +682,6 @@ a {
         gap: 1rem;
     }
     
-    /* Hide 3D models on mobile by default */
-    .model-canvas {
-        display: none !important;
-    }
-    
     .model-placeholder {
         position: static;
     }
