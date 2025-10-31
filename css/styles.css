@@ -489,6 +489,9 @@ a {
     border-radius: 12px;
     display: none;
     cursor: grab;
+    position: absolute;
+    top: 0;
+    left: 0;
 }
 
 .model-canvas.active {
