@@ -1109,9 +1109,6 @@
                 }
             }
         });
-
-        // Prevent zoom on double tap for iOS
-        let lastTouchEnd = 0;
         document.addEventListener('touchend', (e) => {
             const now = Date.now();
             if (now - lastTouchEnd <= 300) {
@@ -1150,10 +1147,9 @@
             }
         });
 
-// Store all 3D viewer instances
 const viewers = {};
 
-// Initialize 3D model viewer
+// Initialize 3D model viewer (works on both desktop and mobile)
 function init3DModel(canvasId, modelPath) {
     console.log('Loading model:', modelPath);
     
@@ -1180,16 +1176,21 @@ function init3DModel(canvasId, modelPath) {
     );
     camera.position.set(5, 5, 5);
 
-    // Setup renderer
+    // Setup renderer with mobile optimizations
     const renderer = new THREE.WebGLRenderer({
         canvas: canvas,
-        antialias: true,
-        alpha: true
+        antialias: window.innerWidth > 767, // Only antialias on desktop
+        alpha: true,
+        powerPreference: "high-performance"
     });
     renderer.setSize(canvas.clientWidth, canvas.clientHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    
+    // Simplified shadows for mobile
+    if (window.innerWidth > 767) {
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    }
 
     // Add lights
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
@@ -1197,7 +1198,9 @@ function init3DModel(canvasId, modelPath) {
     
     const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
     directionalLight.position.set(5, 10, 5);
-    directionalLight.castShadow = true;
+    if (window.innerWidth > 767) {
+        directionalLight.castShadow = true;
+    }
     scene.add(directionalLight);
 
     // Add controls
@@ -1206,6 +1209,7 @@ function init3DModel(canvasId, modelPath) {
     controls.dampingFactor = 0.05;
     controls.autoRotate = true;
     controls.autoRotateSpeed = 1.0;
+    controls.enablePan = window.innerWidth > 767; // Disable pan on mobile
 
     // Store viewer
     viewers[canvasId] = {
@@ -1240,8 +1244,10 @@ function init3DModel(canvasId, modelPath) {
             // Process materials
             model.traverse((child) => {
                 if (child.isMesh) {
-                    child.castShadow = true;
-                    child.receiveShadow = true;
+                    if (window.innerWidth > 767) {
+                        child.castShadow = true;
+                        child.receiveShadow = true;
+                    }
                     viewers[canvasId].originalMaterials.set(child, child.material);
                 }
             });
@@ -1287,21 +1293,78 @@ function init3DModel(canvasId, modelPath) {
     resizeObserver.observe(canvas);
 }
 
-// Update initPageModels to actually load the models
+// Mobile menu toggle
+function toggleMobileMenu() {
+    const btn = document.querySelector('.mobile-menu-btn');
+    const overlay = document.getElementById('mobileNav');
+    btn.classList.toggle('active');
+    overlay.classList.toggle('active');
+    
+    if (overlay.classList.contains('active')) {
+        document.body.style.overflow = 'hidden';
+    } else {
+        document.body.style.overflow = '';
+    }
+}
+
+function closeMobileMenu() {
+    const btn = document.querySelector('.mobile-menu-btn');
+    const overlay = document.getElementById('mobileNav');
+    btn.classList.remove('active');
+    overlay.classList.remove('active');
+    document.body.style.overflow = '';
+}
+
+// Page navigation
+function showPage(pageId) {
+    const pages = document.querySelectorAll('.page');
+    pages.forEach(page => {
+        page.classList.remove('active');
+    });
+    
+    const selectedPage = document.getElementById(pageId);
+    if (selectedPage) {
+        selectedPage.classList.add('active');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        
+        // Initialize 3D models on BOTH desktop AND mobile
+        if (pageId !== 'landing') {
+            setTimeout(() => initPageModels(pageId), 100);
+        }
+    }
+    
+    // Hide swipe indicator
+    const indicator = document.getElementById('swipeIndicator');
+    if (indicator) {
+        setTimeout(() => {
+            indicator.style.display = 'none';
+        }, 3000);
+    }
+}
+
+// Initialize 3D models for a page
 function initPageModels(pageId) {
     console.log('Initializing models for:', pageId);
     
     if (pageId === 'casino') {
         // Load casino models
-        init3DModel('casino-model-1', 'assets/models/casino/bar-counter/bar-counter.glb');
+        if (!viewers['casino-model-1']) {
+            init3DModel('casino-model-1', 'assets/models/casino/bar-counter/bar-counter.glb');
+        }
         // Add other models when you have them:
-        // init3DModel('casino-model-2', 'assets/models/casino/slot-machine/slot-machine.glb');
-        // init3DModel('casino-model-3', 'assets/models/casino/cocktail-glass/cocktail-glass.glb');
+        // if (!viewers['casino-model-2']) {
+        //     init3DModel('casino-model-2', 'assets/models/casino/slot-machine/slot-machine.glb');
+        // }
+    } else if (pageId === 'egyptian') {
+        // Egyptian models
+        // init3DModel('egyptian-model-1', 'assets/models/egyptian/pharaoh-slot/pharaoh-slot.glb');
+    } else if (pageId === 'vault') {
+        // Vault models
+        // init3DModel('vault-model-1', 'assets/models/vault/vault-door/vault-door.glb');
     }
-    // Add other pages when ready
 }
 
-// Update setViewMode to actually change the view
+// View mode toggle
 function setViewMode(canvasId, mode, button) {
     const buttons = button.parentElement.querySelectorAll('.view-btn');
     buttons.forEach(btn => btn.classList.remove('active'));
@@ -1334,6 +1397,122 @@ function setViewMode(canvasId, mode, button) {
         }
     });
 }
+
+// Download resume
+function downloadResume() {
+    const link = document.createElement('a');
+    link.href = 'assets/documents/resume.pdf';
+    link.download = 'Aidan_Stephenson_Resume.pdf';
+    link.target = '_blank';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+
+document.addEventListener('touchstart', (e) => {
+    touchStartX = e.changedTouches[0].screenX;
+    touchStartY = e.changedTouches[0].screenY;
+}, { passive: true });
+
+document.addEventListener('touchend', (e) => {
+    touchEndX = e.changedTouches[0].screenX;
+    touchEndY = e.changedTouches[0].screenY;
+    handleSwipe();
+}, { passive: true });
+
+function handleSwipe() {
+    const diffX = touchStartX - touchEndX;
+    const diffY = Math.abs(touchStartY - touchEndY);
+    
+    if (Math.abs(diffX) > minSwipeDistance && diffY < 100) {
+        const pageOrder = ['landing', 'casino', 'egyptian', 'vault'];
+        const currentPage = document.querySelector('.page.active');
+        
+        if (currentPage) {
+            const currentId = currentPage.id;
+            const currentIndex = pageOrder.indexOf(currentId);
+            
+            if (diffX > 0 && currentIndex < pageOrder.length - 1) {
+                showPage(pageOrder[currentIndex + 1]);
+            } else if (diffX < 0 && currentIndex > 0) {
+                showPage(pageOrder[currentIndex - 1]);
+            }
+        }
+    }
+}
+
+// Keyboard navigation
+document.addEventListener('keydown', (e) => {
+    if (window.innerWidth > 767) {
+        const pageOrder = ['landing', 'casino', 'egyptian', 'vault'];
+        const currentPage = document.querySelector('.page.active');
+        
+        if (currentPage) {
+            const currentId = currentPage.id;
+            const currentIndex = pageOrder.indexOf(currentId);
+            
+            if (e.key === 'ArrowLeft' && currentIndex > 0) {
+                showPage(pageOrder[currentIndex - 1]);
+            } else if (e.key === 'ArrowRight' && currentIndex < pageOrder.length - 1) {
+                showPage(pageOrder[currentIndex + 1]);
+            } else if (e.key === 'Escape') {
+                showPage('landing');
+                closeMobileMenu();
+            }
+        }
+    }
+});
+
+// Prevent zoom on double tap
+let lastTouchEnd = 0;
+document.addEventListener('touchend', (e) => {
+    const now = Date.now();
+    if (now - lastTouchEnd <= 300) {
+        e.preventDefault();
+    }
+    lastTouchEnd = now;
+}, false);
+
+// Handle orientation change
+window.addEventListener('orientationchange', () => {
+    setTimeout(() => {
+        window.scrollTo(0, 0);
+        // Resize all active renderers
+        Object.values(viewers).forEach(viewer => {
+            if (viewer.camera && viewer.renderer) {
+                const canvas = viewer.renderer.domElement;
+                viewer.camera.aspect = canvas.clientWidth / canvas.clientHeight;
+                viewer.camera.updateProjectionMatrix();
+                viewer.renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+            }
+        });
+    }, 100);
+});
+
+// Initialize on load
+document.addEventListener('DOMContentLoaded', () => {
+    // Set viewport height
+    const setVH = () => {
+        const vh = window.innerHeight * 0.01;
+        document.documentElement.style.setProperty('--vh', `${vh}px`);
+    };
+    setVH();
+    window.addEventListener('resize', setVH);
+    
+    // Hide swipe indicator on desktop
+    if (window.innerWidth > 767) {
+        const indicator = document.getElementById('swipeIndicator');
+        if (indicator) indicator.style.display = 'none';
+    }
+    
+    // Check for URL hash
+    if (window.location.hash) {
+        const pageId = window.location.hash.substring(1);
+        showPage(pageId);
+    }
+    });
+
     </script>
 </body>
 </html>
