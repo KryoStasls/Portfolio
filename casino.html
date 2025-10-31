@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#0a0e27">
+    <meta name="description" content="Casino Bar Game Assets - 3D models and PBR textures for gaming environments">
+    <title>Casino Bar Assets - Aidan Stephenson</title>
+    <link rel="stylesheet" href="css/styles.css">
+    
+    <!-- Three.js CDN - Only load on project pages -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="logo">AS</a>
+            
+            <!-- Desktop Menu -->
+            <div class="nav-menu">
+                <a href="index.html" class="nav-item">Home</a>
+                <div class="nav-item dropdown-trigger active">
+                    Projects
+                    <div class="dropdown">
+                        <a href="casino.html" class="dropdown-item active">Casino Bar</a>
+                        <a href="egyptian.html" class="dropdown-item">Egyptian Casino</a>
+                        <a href="vault.html" class="dropdown-item">Bank Vault</a>
+                    </div>
+                </div>
+                <a href="assets/documents/resume.pdf" class="nav-item" download>Resume</a>
+            </div>
+
+            <!-- Mobile Menu Button -->
+            <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Mobile Navigation Overlay -->
+    <div class="mobile-nav-overlay" id="mobileNav">
+        <div class="mobile-nav-content">
+            <a href="index.html" class="mobile-nav-item">Home</a>
+            <div class="mobile-nav-item">
+                Projects
+                <div class="mobile-nav-submenu">
+                    <a href="casino.html" class="mobile-nav-subitem active">Casino Bar</a>
+                    <a href="egyptian.html" class="mobile-nav-subitem">Egyptian Casino</a>
+                    <a href="vault.html" class="mobile-nav-subitem">Bank Vault</a>
+                </div>
+            </div>
+            <a href="assets/documents/resume.pdf" class="mobile-nav-item" download>Resume</a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="container project-page">
+        <!-- Project Header -->
+        <section class="project-header">
+            <h1 class="project-title">Casino Bar Game Assets</h1>
+            <p class="project-description">
+                This comprehensive asset pack brings the excitement and glamour of a high-end casino bar to life. 
+                Featuring meticulously crafted 3D models with PBR textures, this collection includes everything 
+                from elegant bar counters and stools to slot machines and decorative elements. Each asset is 
+                optimized for real-time rendering while maintaining exceptional visual quality.
+            </p>
+        </section>
+
+        <!-- Render Gallery -->
+        <section class="render-gallery">
+            <div class="render-image">
+                <img src="assets/images/renders/casino/casino-bar-scene.jpg" alt="Casino Bar Scene" loading="lazy">
+            </div>
+            <div class="render-image">
+                <img src="assets/images/renders/casino/casino-assets-all.jpg" alt="Casino Assets Collection" loading="lazy">
+            </div>
+        </section>
+
+        <!-- 3D Models Section -->
+        <section class="models-section">
+            <h2 class="section-title">Featured Assets</h2>
+            
+            <div class="models-grid">
+                <!-- Bar Counter Model -->
+                <div class="model-viewer">
+                    <h3>Bar Counter</h3>
+                    <div class="model-container">
+                        <canvas class="model-canvas" id="casino-model-1"></canvas>
+                        <div class="model-placeholder">
+                            <img src="assets/images/models/casino-bar-counter-preview.jpg" alt="Bar Counter Preview">
+                            <button class="load-3d-btn" onclick="load3DModel('casino-model-1', 'assets/models/casino/bar-counter/bar-counter.glb', this)">
+                                Load 3D Model
+                            </button>
+                        </div>
+                    </div>
+                    <div class="viewer-controls">
+                        <button class="view-btn active" onclick="setViewMode('casino-model-1', 'textured', this)">Textured</button>
+                        <button class="view-btn" onclick="setViewMode('casino-model-1', 'solid', this)">Solid</button>
+                        <button class="view-btn" onclick="setViewMode('casino-model-1', 'wireframe', this)">Wireframe</button>
+                    </div>
+                </div>
+
+                <!-- Slot Machine Model -->
+                <div class="model-viewer">
+                    <h3>Slot Machine</h3>
+                    <div class="model-container">
+                        <canvas class="model-canvas" id="casino-model-2"></canvas>
+                        <div class="model-placeholder">
+                            <img src="assets/images/models/casino-slot-machine-preview.jpg" alt="Slot Machine Preview">
+                            <button class="load-3d-btn" onclick="load3DModel('casino-model-2', 'assets/models/casino/slot-machine/slot-machine.glb', this)">
+                                Load 3D Model
+                            </button>
+                        </div>
+                    </div>
+                    <div class="viewer-controls">
+                        <button class="view-btn active" onclick="setViewMode('casino-model-2', 'textured', this)">Textured</button>
+                        <button class="view-btn" onclick="setViewMode('casino-model-2', 'solid', this)">Solid</button>
+                        <button class="view-btn" onclick="setViewMode('casino-model-2', 'wireframe', this)">Wireframe</button>
+                    </div>
+                </div>
+
+                <!-- Cocktail Glass Set Model -->
+                <div class="model-viewer">
+                    <h3>Cocktail Glass Set</h3>
+                    <div class="model-container">
+                        <canvas class="model-canvas" id="casino-model-3"></canvas>
+                        <div class="model-placeholder">
+                            <img src="assets/images/models/casino-cocktail-glass-preview.jpg" alt="Cocktail Glass Preview">
+                            <button class="load-3d-btn" onclick="load3DModel('casino-model-3', 'assets/models/casino/cocktail-glass/cocktail-glass.glb', this)">
+                                Load 3D Model
+                            </button>
+                        </div>
+                    </div>
+                    <div class="viewer-controls">
+                        <button class="view-btn active" onclick="setViewMode('casino-model-3', 'textured', this)">Textured</button>
+                        <button class="view-btn" onclick="setViewMode('casino-model-3', 'solid', this)">Solid</button>
+                        <button class="view-btn" onclick="setViewMode('casino-model-3', 'wireframe', this)">Wireframe</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Project Navigation -->
+        <section class="project-nav">
+            <a href="index.html" class="prev-project">← Back to Projects</a>
+            <a href="egyptian.html" class="next-project">Egyptian Casino →</a>
+        </section>
+    </main>
+
+    <script src="js/main.js"></script>
+    <script src="js/model-viewer.js"></script>
+    <script>
+        // Auto-load first model on desktop
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.innerWidth > 1024) {
+                // Auto-load first model on desktop only
+                const firstBtn = document.querySelector('.load-3d-btn');
+                if (firstBtn) {
+                    firstBtn.click();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
