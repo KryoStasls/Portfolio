@@ -1,4 +1,4 @@
-// js/model-viewer.js - Mobile-Optimized 3D Model Viewer with Debugging
+// js/model-viewer.js - Mobile-Optimized 3D Model Viewer
 
 // Store active viewers
 const viewers = {};
@@ -26,28 +26,24 @@ class ModelViewer {
         // Performance settings
         this.isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
         this.pixelRatio = this.isMobile ? Math.min(window.devicePixelRatio, 2) : window.devicePixelRatio;
-        
-        console.log('ModelViewer created for:', canvasId, 'Canvas element:', this.canvas);
     }
 
     init() {
-        if (this.isInitialized) {
-            console.log('Already initialized');
-            return;
-        }
-        
-        console.log('Initializing 3D viewer...');
+        if (this.isInitialized) return;
         
         // Scene setup
         this.scene = new THREE.Scene();
         this.scene.background = new THREE.Color(0x0a0e27);
-        console.log('Scene created');
+        
+        // Get proper dimensions from parent container
+        const container = this.canvas.parentElement;
+        const width = container.clientWidth || container.offsetWidth || 400;
+        const height = container.clientHeight || container.offsetHeight || 400;
         
         // Camera setup
-        const aspect = this.canvas.clientWidth / this.canvas.clientHeight;
+        const aspect = width / height;
         this.camera = new THREE.PerspectiveCamera(50, aspect, 0.1, 1000);
         this.camera.position.set(0, 1, 3);
-        console.log('Camera created at position:', this.camera.position);
         
         // Renderer setup with mobile optimizations
         try {
@@ -59,20 +55,15 @@ class ModelViewer {
             });
             
             this.renderer.setPixelRatio(this.pixelRatio);
-            // Get proper dimensions from parent container
-            const container = this.canvas.parentElement;
-            const width = container.clientWidth || container.offsetWidth || 400;
-            const height = container.clientHeight || container.offsetHeight || 400;
             this.renderer.setSize(width, height);
             this.canvas.style.width = width + 'px';
             this.canvas.style.height = height + 'px';
-            console.log('Initial size set to:', width, 'x', height);
+            
             this.renderer.shadowMap.enabled = !this.isMobile;
             this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
             this.renderer.outputEncoding = THREE.sRGBEncoding;
             this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
             this.renderer.toneMappingExposure = 1.2;
-            console.log('Renderer created, size:', this.canvas.clientWidth, 'x', this.canvas.clientHeight);
         } catch (error) {
             console.error('Failed to create WebGL renderer:', error);
             this.showError('WebGL not supported');
@@ -88,41 +79,18 @@ class ModelViewer {
         // Touch event handlers for mobile
         this.setupTouchHandlers();
         
-        // Add a test cube to verify rendering works
-        this.addTestCube();
-        
-        // Start rendering immediately to show test cube
-        this.animate();
-        
         // Handle resize
         this.handleResize = this.handleResize.bind(this);
         window.addEventListener('resize', this.handleResize);
         
-        // Handle visibility change (pause when not visible)
+        // Handle visibility change
         this.handleVisibilityChange = this.handleVisibilityChange.bind(this);
         document.addEventListener('visibilitychange', this.handleVisibilityChange);
         
         this.isInitialized = true;
-        console.log('Initialization complete');
-    }
-
-    addTestCube() {
-        console.log('Adding test cube to scene');
-        const geometry = new THREE.BoxGeometry(1, 1, 1);
-        const material = new THREE.MeshStandardMaterial({ 
-            color: 0x667eea,
-            wireframe: false
-        });
-        const cube = new THREE.Mesh(geometry, material);
-        cube.position.set(0, 0, 0);
-        this.scene.add(cube);
-        this.testCube = cube;
-        console.log('Test cube added at position:', cube.position);
     }
 
     setupLighting() {
-        console.log('Setting up lighting');
-        
         // Ambient light
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
         this.scene.add(ambientLight);
@@ -148,12 +116,13 @@ class ModelViewer {
         fillLight.position.set(-5, 5, -5);
         this.scene.add(fillLight);
         
-        console.log('Lighting setup complete');
+        // Rim light
+        const rimLight = new THREE.DirectionalLight(0x764ba2, 0.2);
+        rimLight.position.set(0, -5, -10);
+        this.scene.add(rimLight);
     }
 
     setupControls() {
-        console.log('Setting up controls');
-        
         if (!THREE.OrbitControls) {
             console.error('OrbitControls not loaded!');
             return;
@@ -172,14 +141,10 @@ class ModelViewer {
             this.controls.rotateSpeed = 0.5;
             this.controls.zoomSpeed = 0.8;
         }
-        
-        console.log('Controls setup complete');
     }
 
     setupTouchHandlers() {
         if (!this.isMobile) return;
-        
-        console.log('Setting up touch handlers for mobile');
         
         this.canvas.addEventListener('touchstart', (e) => {
             this.isTouch = true;
@@ -218,19 +183,9 @@ class ModelViewer {
     }
 
     loadModel(modelPath) {
-        console.log('Starting to load model from:', modelPath);
-        
-        // Remove test cube if it exists
-        if (this.testCube) {
-            this.scene.remove(this.testCube);
-            this.testCube = null;
-            console.log('Removed test cube');
-        }
-        
         // Show loading state
         this.showLoading(true);
         
-        // Check if GLTFLoader exists
         if (!THREE.GLTFLoader) {
             console.error('GLTFLoader is not available!');
             this.showError('3D loader not available');
@@ -243,9 +198,6 @@ class ModelViewer {
         loader.load(
             modelPath,
             (gltf) => {
-                console.log('Model loaded successfully:', gltf);
-                console.log('Scene contents:', gltf.scene);
-                
                 // Remove old model
                 if (this.model) {
                     this.scene.remove(this.model);
@@ -254,37 +206,16 @@ class ModelViewer {
                 
                 this.model = gltf.scene;
                 
-                // Check if model has any meshes
-                let meshCount = 0;
-                this.model.traverse((child) => {
-                    if (child.isMesh) {
-                        meshCount++;
-                        console.log('Found mesh:', child.name, 'Geometry:', child.geometry, 'Material:', child.material);
-                    }
-                });
-                console.log('Total meshes found:', meshCount);
-                
-                if (meshCount === 0) {
-                    console.warn('Model has no meshes!');
-                }
-                
                 // Center and scale model
                 const box = new THREE.Box3().setFromObject(this.model);
                 const center = box.getCenter(new THREE.Vector3());
                 const size = box.getSize(new THREE.Vector3());
-                
-                console.log('Model bounding box:', box);
-                console.log('Model center:', center);
-                console.log('Model size:', size);
                 
                 const maxDim = Math.max(size.x, size.y, size.z);
                 const scale = maxDim > 0 ? 2 / maxDim : 1;
                 
                 this.model.scale.multiplyScalar(scale);
                 this.model.position.sub(center.multiplyScalar(scale));
-                
-                console.log('Model scaled by:', scale);
-                console.log('Model position:', this.model.position);
                 
                 // Setup materials
                 this.model.traverse((child) => {
@@ -304,16 +235,13 @@ class ModelViewer {
                 });
                 
                 this.scene.add(this.model);
-                console.log('Model added to scene');
-                console.log('Scene children count:', this.scene.children.length);
+                this.showLoading(false);
+                
                 // Force a resize to ensure proper dimensions
                 this.handleResize();
                 
-                this.showLoading(false);
-                
                 // Start animation if not already running
                 if (!this.animationId) {
-                    console.log('Starting animation loop');
                     this.animate();
                 }
                 
@@ -325,52 +253,20 @@ class ModelViewer {
             },
             (progress) => {
                 const percent = progress.total > 0 ? (progress.loaded / progress.total) * 100 : 0;
-                console.log('Loading progress:', percent.toFixed(2) + '%');
                 this.updateLoadingProgress(percent);
             },
             (error) => {
                 console.error('Error loading model:', error);
-                console.error('Failed path:', modelPath);
-                this.showError('Failed to load 3D model: Check console for details');
+                this.showError('Failed to load 3D model');
                 this.showLoading(false);
             }
         );
     }
 
-    animate() {
-        this.animationId = requestAnimationFrame(() => this.animate());
-        
-        // Only render when visible
-        if (document.hidden) return;
-        
-        // Update controls
-        if (this.controls) {
-            this.controls.update();
-        }
-        
-        // Rotate test cube if it exists
-        if (this.testCube) {
-            this.testCube.rotation.x += 0.01;
-            this.testCube.rotation.y += 0.01;
-        }
-        
-        // Render
-        if (this.renderer && this.scene && this.camera) {
-            this.renderer.render(this.scene, this.camera);
-        }
-    }
-
-    // ... (rest of the methods remain the same: setViewMode, handleResize, etc.)
-    
     setViewMode(mode) {
         this.viewMode = mode;
         
-        if (!this.model) {
-            console.log('No model loaded to change view mode');
-            return;
-        }
-        
-        console.log('Changing view mode to:', mode);
+        if (!this.model) return;
         
         this.model.traverse((child) => {
             if (child.isMesh) {
@@ -399,24 +295,36 @@ class ModelViewer {
         });
     }
 
-handleResize() {
-    if (!this.camera || !this.renderer || !this.canvas) return;
-    
-    // Get the parent container dimensions instead of canvas dimensions
-    const container = this.canvas.parentElement;
-    const width = container.clientWidth || container.offsetWidth || 400;
-    const height = container.clientHeight || container.offsetHeight || 400;
-    
-    // Ensure canvas has explicit dimensions
-    this.canvas.style.width = width + 'px';
-    this.canvas.style.height = height + 'px';
-    
-    this.camera.aspect = width / height;
-    this.camera.updateProjectionMatrix();
-    this.renderer.setSize(width, height);
-    
-    console.log('Resized to:', width, 'x', height);
-}
+    animate() {
+        this.animationId = requestAnimationFrame(() => this.animate());
+        
+        if (document.hidden) return;
+        
+        if (this.controls) {
+            this.controls.update();
+        }
+        
+        if (this.renderer && this.scene && this.camera) {
+            this.renderer.render(this.scene, this.camera);
+        }
+    }
+
+    handleResize() {
+        if (!this.camera || !this.renderer || !this.canvas) return;
+        
+        // Get the parent container dimensions
+        const container = this.canvas.parentElement;
+        const width = container.clientWidth || container.offsetWidth || 400;
+        const height = container.clientHeight || container.offsetHeight || 400;
+        
+        // Ensure canvas has explicit dimensions
+        this.canvas.style.width = width + 'px';
+        this.canvas.style.height = height + 'px';
+        
+        this.camera.aspect = width / height;
+        this.camera.updateProjectionMatrix();
+        this.renderer.setSize(width, height);
+    }
 
     handleVisibilityChange() {
         if (document.hidden && this.animationId) {
@@ -520,13 +428,6 @@ handleResize() {
 
 // Global functions for HTML onclick handlers
 function load3DModel(canvasId, modelPath, buttonElement) {
-    console.log('=== load3DModel called ===');
-    console.log('Canvas ID:', canvasId);
-    console.log('Model Path:', modelPath);
-    console.log('Three.js loaded:', typeof THREE !== 'undefined');
-    console.log('GLTFLoader loaded:', typeof THREE !== 'undefined' && typeof THREE.GLTFLoader !== 'undefined');
-    console.log('OrbitControls loaded:', typeof THREE !== 'undefined' && typeof THREE.OrbitControls !== 'undefined');
-    
     // Check if Three.js is loaded
     if (typeof THREE === 'undefined') {
         console.error('Three.js is not loaded');
@@ -543,11 +444,8 @@ function load3DModel(canvasId, modelPath, buttonElement) {
     
     // Initialize viewer if needed
     if (!viewers[canvasId]) {
-        console.log('Creating new viewer for:', canvasId);
         viewers[canvasId] = new ModelViewer(canvasId);
         viewers[canvasId].init();
-    } else {
-        console.log('Using existing viewer for:', canvasId);
     }
     
     // Show canvas and hide placeholder
@@ -570,12 +468,7 @@ function load3DModel(canvasId, modelPath, buttonElement) {
 }
 
 function setViewMode(canvasId, mode, buttonElement) {
-    console.log('Setting view mode:', mode, 'for canvas:', canvasId);
-    
-    if (!viewers[canvasId]) {
-        console.error('No viewer found for canvas:', canvasId);
-        return;
-    }
+    if (!viewers[canvasId]) return;
     
     viewers[canvasId].setViewMode(mode);
     
@@ -592,11 +485,8 @@ window.addEventListener('beforeunload', () => {
     Object.values(viewers).forEach(viewer => viewer.dispose());
 });
 
-// Auto-load on mobile if user opts in
+// Mobile info tooltips
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM Content Loaded');
-    console.log('Three.js version:', THREE ? THREE.REVISION : 'not loaded');
-    
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     
     if (isMobile) {
