@@ -4,12 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#0a0e27">
     <meta name="description" content="Casino Bar Game Assets - 3D models and PBR textures for gaming environments">
     <title>Casino Bar Assets - Aidan Stephenson</title>
     <link rel="stylesheet" href="css/styles.css">
     
-    <!-- Three.js CDN - Only load on project pages -->
+    <!-- Three.js CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
@@ -67,18 +68,21 @@
             <p class="project-description">
                 This comprehensive asset pack brings the excitement and glamour of a high-end casino bar to life. 
                 Featuring meticulously crafted 3D models with PBR textures, this collection includes everything 
-                from elegant bar counters and stools to slot machines and decorative elements. Each asset is 
-                optimized for real-time rendering while maintaining exceptional visual quality.
+                from elegant bar furniture to gaming accessories. Each asset is optimized for real-time rendering 
+                while maintaining exceptional visual quality.
             </p>
         </section>
 
         <!-- Render Gallery -->
         <section class="render-gallery">
             <div class="render-image">
-                <img src="assets/images/renders/casino/casino-bar-scene.jpg" alt="Casino Bar Scene" loading="lazy">
+                <img src="assets/images/casino/Casino-Image-1.png" alt="Casino Bar Scene 1" loading="lazy">
             </div>
             <div class="render-image">
-                <img src="assets/images/renders/casino/casino-assets-all.jpg" alt="Casino Assets Collection" loading="lazy">
+                <img src="assets/images/casino/Casino-Image-2.png" alt="Casino Bar Scene 2" loading="lazy">
+            </div>
+            <div class="render-image">
+                <img src="assets/images/casino/Casino-Image-3.png" alt="Casino Bar Scene 3" loading="lazy">
             </div>
         </section>
 
@@ -87,14 +91,14 @@
             <h2 class="section-title">Featured Assets</h2>
             
             <div class="models-grid">
-                <!-- Bar Counter Model -->
+                <!-- Chair Model -->
                 <div class="model-viewer">
-                    <h3>Bar Counter</h3>
+                    <h3>Casino Chair</h3>
                     <div class="model-container">
                         <canvas class="model-canvas" id="casino-model-1"></canvas>
                         <div class="model-placeholder">
-                            <img src="assets/images/models/casino-bar-counter-preview.jpg" alt="Bar Counter Preview">
-                            <button class="load-3d-btn" onclick="load3DModel('casino-model-1', 'assets/models/casino/bar-counter/bar-counter.glb', this)">
+                            <div style="width: 100%; height: 100%; background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));"></div>
+                            <button class="load-3d-btn" onclick="load3DModel('casino-model-1', 'assets/models/casino/chair.glb', this)">
                                 Load 3D Model
                             </button>
                         </div>
@@ -106,14 +110,14 @@
                     </div>
                 </div>
 
-                <!-- Slot Machine Model -->
+                <!-- Poker Box Model -->
                 <div class="model-viewer">
-                    <h3>Slot Machine</h3>
+                    <h3>Poker Box</h3>
                     <div class="model-container">
                         <canvas class="model-canvas" id="casino-model-2"></canvas>
                         <div class="model-placeholder">
-                            <img src="assets/images/models/casino-slot-machine-preview.jpg" alt="Slot Machine Preview">
-                            <button class="load-3d-btn" onclick="load3DModel('casino-model-2', 'assets/models/casino/slot-machine/slot-machine.glb', this)">
+                            <div style="width: 100%; height: 100%; background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));"></div>
+                            <button class="load-3d-btn" onclick="load3DModel('casino-model-2', 'assets/models/casino/poker-box.glb', this)">
                                 Load 3D Model
                             </button>
                         </div>
@@ -125,14 +129,14 @@
                     </div>
                 </div>
 
-                <!-- Cocktail Glass Set Model -->
+                <!-- Watch Model -->
                 <div class="model-viewer">
-                    <h3>Cocktail Glass Set</h3>
+                    <h3>Luxury Watch</h3>
                     <div class="model-container">
                         <canvas class="model-canvas" id="casino-model-3"></canvas>
                         <div class="model-placeholder">
-                            <img src="assets/images/models/casino-cocktail-glass-preview.jpg" alt="Cocktail Glass Preview">
-                            <button class="load-3d-btn" onclick="load3DModel('casino-model-3', 'assets/models/casino/cocktail-glass/cocktail-glass.glb', this)">
+                            <div style="width: 100%; height: 100%; background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));"></div>
+                            <button class="load-3d-btn" onclick="load3DModel('casino-model-3', 'assets/models/casino/watch.glb', this)">
                                 Load 3D Model
                             </button>
                         </div>
@@ -155,17 +159,5 @@
 
     <script src="js/main.js"></script>
     <script src="js/model-viewer.js"></script>
-    <script>
-        // Auto-load first model on desktop
-        document.addEventListener('DOMContentLoaded', () => {
-            if (window.innerWidth > 1024) {
-                // Auto-load first model on desktop only
-                const firstBtn = document.querySelector('.load-3d-btn');
-                if (firstBtn) {
-                    firstBtn.click();
-                }
-            }
-        });
-    </script>
 </body>
 </html>

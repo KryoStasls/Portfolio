@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#0a0e27">
+    <meta name="description" content="Bank Vault Game Assets - High-security 3D models for heist game environments">
+    <title>Bank Vault Assets - Aidan Stephenson</title>
+    <link rel="stylesheet" href="css/styles.css">
+    
+    <!-- Three.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="logo">AS</a>
+            
+            <!-- Desktop Menu -->
+            <div class="nav-menu">
+                <a href="index.html" class="nav-item">Home</a>
+                <div class="nav-item dropdown-trigger active">
+                    Projects
+                    <div class="dropdown">
+                        <a href="casino.html" class="dropdown-item">Casino Bar</a>
+                        <a href="egyptian.html" class="dropdown-item">Egyptian Casino</a>
+                        <a href="vault.html" class="dropdown-item active">Bank Vault</a>
+                    </div>
+                </div>
+                <a href="assets/documents/resume.pdf" class="nav-item" download>Resume</a>
+            </div>
+
+            <!-- Mobile Menu Button -->
+            <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Mobile Navigation Overlay -->
+    <div class="mobile-nav-overlay" id="mobileNav">
+        <div class="mobile-nav-content">
+            <a href="index.html" class="mobile-nav-item">Home</a>
+            <div class="mobile-nav-item">
+                Projects
+                <div class="mobile-nav-submenu">
+                    <a href="casino.html" class="mobile-nav-subitem">Casino Bar</a>
+                    <a href="egyptian.html" class="mobile-nav-subitem">Egyptian Casino</a>
+                    <a href="vault.html" class="mobile-nav-subitem active">Bank Vault</a>
+                </div>
+            </div>
+            <a href="assets/documents/resume.pdf" class="mobile-nav-item" download>Resume</a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="container project-page">
+        <!-- Project Header -->
+        <section class="project-header">
+            <h1 class="project-title">Bank Vault Game Assets</h1>
+            <p class="project-description">
+                High-security bank vault environment designed for heist and stealth games. This collection 
+                features intricate mechanical details, reinforced steel doors, security equipment, and 
+                authentic bank vault components. Each model is crafted with attention to real-world security 
+                systems while maintaining optimal performance for game engines.
+            </p>
+        </section>
+
+        <!-- Render Gallery -->
+        <section class="render-gallery">
+            <div class="render-image">
+                <img src="assets/images/bank/Bank-Image-1.png" alt="Bank Vault Scene 1" loading="lazy">
+            </div>
+            <div class="render-image">
+                <img src="assets/images/bank/Bank-Image-2.png" alt="Bank Vault Scene 2" loading="lazy">
+            </div>
+            <div class="render-image">
+                <img src="assets/images/bank/Bank-Image-3.png" alt="Bank Vault Scene 3" loading="lazy">
+            </div>
+        </section>
+
+        <!-- 3D Models Section -->
+        <section class="models-section">
+            <h2 class="section-title">Featured Assets</h2>
+            
+            <div class="models-grid">
+                <!-- Vault Door Model -->
+                <div class="model-viewer">
+                    <h3>Vault Door</h3>
+                    <div class="model-container">
+                        <canvas class="model-canvas" id="vault-model-1"></canvas>
+                        <div class="model-placeholder">
+                            <div style="width: 100%; height: 100%; background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));"></div>
+                            <button class="load-3d-btn" onclick="load3DModel('vault-model-1', 'assets/models/bank/vault-door.glb', this)">
+                                Load 3D Model
+                            </button>
+                        </div>
+                    </div>
+                    <div class="viewer-controls">
+                        <button class="view-btn active" onclick="setViewMode('vault-model-1', 'textured', this)">Textured</button>
+                        <button class="view-btn" onclick="setViewMode('vault-model-1', 'solid', this)">Solid</button>
+                        <button class="view-btn" onclick="setViewMode('vault-model-1', 'wireframe', this)">Wireframe</button>
+                    </div>
+                </div>
+
+                <!-- Shotgun Model -->
+                <div class="model-viewer">
+                    <h3>Security Shotgun</h3>
+                    <div class="model-container">
+                        <canvas class="model-canvas" id="vault-model-2"></canvas>
+                        <div class="model-placeholder">
+                            <div style="width: 100%; height: 100%; background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));"></div>
+                            <button class="load-3d-btn" onclick="load3DModel('vault-model-2', 'assets/models/bank/shotgun.glb', this)">
+                                Load 3D Model
+                            </button>
+                        </div>
+                    </div>
+                    <div class="viewer-controls">
+                        <button class="view-btn active" onclick="setViewMode('vault-model-2', 'textured', this)">Textured</button>
+                        <button class="view-btn" onclick="setViewMode('vault-model-2', 'solid', this)">Solid</button>
+                        <button class="view-btn" onclick="setViewMode('vault-model-2', 'wireframe', this)">Wireframe</button>
+                    </div>
+                </div>
+
+                <!-- Syringe Model -->
+                <div class="model-viewer">
+                    <h3>Medical Syringe</h3>
+                    <div class="model-container">
+                        <canvas class="model-canvas" id="vault-model-3"></canvas>
+                        <div class="model-placeholder">
+                            <div style="width: 100%; height: 100%; background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));"></div>
+                            <button class="load-3d-btn" onclick="load3DModel('vault-model-3', 'assets/models/bank/syringe.glb', this)">
+                                Load 3D Model
+                            </button>
+                        </div>
+                    </div>
+                    <div class="viewer-controls">
+                        <button class="view-btn active" onclick="setViewMode('vault-model-3', 'textured', this)">Textured</button>
+                        <button class="view-btn" onclick="setViewMode('vault-model-3', 'solid', this)">Solid</button>
+                        <button class="view-btn" onclick="setViewMode('vault-model-3', 'wireframe', this)">Wireframe</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Project Navigation -->
+        <section class="project-nav">
+            <a href="egyptian.html" class="prev-project">← Egyptian Casino</a>
+            <a href="index.html" class="next-project">Back to Projects →</a>
+        </section>
+    </main>
+
+    <script src="js/main.js"></script>
+    <script src="js/model-viewer.js"></script>
+</body>
+</html>
