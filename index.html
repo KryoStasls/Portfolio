@@ -2,8 +2,16 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0a0e27">
     <title>Aidan Stephenson - 3D Generalist Portfolio</title>
+    
+    <!-- Three.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     
     <style>
         /* Global Reset and Variables */
@@ -17,24 +25,36 @@
             --glass-bg: rgba(21, 25, 49, 0.5);
             --glass-border: rgba(255, 255, 255, 0.1);
             --transition-speed: 0.3s;
+            --nav-height: 60px;
+            --safe-area-inset-top: env(safe-area-inset-top);
+            --safe-area-inset-bottom: env(safe-area-inset-bottom);
         }
 
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html {
+            overflow-x: hidden;
+            touch-action: pan-y;
         }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, var(--primary-dark) 0%, var(--secondary-dark) 50%, var(--primary-dark) 100%);
             min-height: 100vh;
+            min-height: -webkit-fill-available;
             color: var(--text-primary);
             overflow-x: hidden;
             position: relative;
+            padding-top: var(--safe-area-inset-top);
+            padding-bottom: var(--safe-area-inset-bottom);
         }
 
-        /* Background Animation */
+        /* Background Animation - Lighter for mobile performance */
         body::before {
             content: '';
             position: fixed;
@@ -42,51 +62,91 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: 
-                radial-gradient(circle at 20% 50%, rgba(102, 126, 234, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(118, 75, 162, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 40% 20%, rgba(102, 126, 234, 0.05) 0%, transparent 50%);
+            background: radial-gradient(circle at 50% 50%, rgba(102, 126, 234, 0.08) 0%, transparent 70%);
             pointer-events: none;
             z-index: 0;
         }
 
-        /* Navigation */
+        /* Mobile Navigation */
         .navbar {
             position: fixed;
             top: 0;
             width: 100%;
-            background: rgba(10, 14, 39, 0.85);
+            height: var(--nav-height);
+            background: rgba(10, 14, 39, 0.95);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border-bottom: 1px solid var(--glass-border);
             z-index: 1000;
-            animation: slideDown 0.6s ease-out;
+            padding-top: var(--safe-area-inset-top);
         }
 
         .nav-container {
             max-width: 1400px;
             margin: 0 auto;
-            padding: 1.5rem 2rem;
+            padding: 0 1rem;
+            height: var(--nav-height);
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
         .logo {
-            font-size: 1.5rem;
+            font-size: 1.25rem;
             font-weight: 700;
             background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-purple) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
             cursor: pointer;
-            transition: transform var(--transition-speed) ease;
         }
 
-        .logo:hover {
-            transform: scale(1.05);
+        /* Mobile Menu Button */
+        .mobile-menu-btn {
+            display: none;
+            width: 30px;
+            height: 30px;
+            position: relative;
+            cursor: pointer;
+            z-index: 1002;
         }
 
+        .mobile-menu-btn span {
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            background: var(--text-primary);
+            transition: all 0.3s ease;
+            left: 0;
+        }
+
+        .mobile-menu-btn span:nth-child(1) {
+            top: 8px;
+        }
+
+        .mobile-menu-btn span:nth-child(2) {
+            top: 14px;
+        }
+
+        .mobile-menu-btn span:nth-child(3) {
+            top: 20px;
+        }
+
+        .mobile-menu-btn.active span:nth-child(1) {
+            transform: rotate(45deg);
+            top: 14px;
+        }
+
+        .mobile-menu-btn.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .mobile-menu-btn.active span:nth-child(3) {
+            transform: rotate(-45deg);
+            top: 14px;
+        }
+
+        /* Desktop Navigation Menu */
         .nav-menu {
             display: flex;
             gap: 2rem;
@@ -99,19 +159,78 @@
             padding: 0.5rem 1rem;
             border-radius: 8px;
             transition: all var(--transition-speed) ease;
+            white-space: nowrap;
         }
 
         .nav-item:hover {
             background: rgba(102, 126, 234, 0.1);
         }
 
+        /* Mobile Navigation Overlay */
+        .mobile-nav-overlay {
+            display: none;
+            position: fixed;
+            top: var(--nav-height);
+            left: 0;
+            width: 100%;
+            height: calc(100vh - var(--nav-height));
+            background: rgba(10, 14, 39, 0.98);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            z-index: 999;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            padding-top: calc(var(--safe-area-inset-top) + 2rem);
+        }
+
+        .mobile-nav-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .mobile-nav-content {
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .mobile-nav-item {
+            padding: 1rem;
+            background: var(--glass-bg);
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.1rem;
+        }
+
+        .mobile-nav-item:active {
+            transform: scale(0.98);
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .mobile-nav-submenu {
+            margin-top: 0.5rem;
+            padding-left: 1rem;
+        }
+
+        .mobile-nav-subitem {
+            padding: 0.75rem;
+            margin-top: 0.5rem;
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        /* Dropdown for desktop */
         .dropdown {
             position: absolute;
             top: 100%;
             left: 0;
             background: rgba(21, 25, 49, 0.95);
             backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
             border-radius: 12px;
             margin-top: 0.5rem;
             padding: 0.5rem;
@@ -121,7 +240,6 @@
             transform: translateY(-10px);
             transition: all var(--transition-speed) ease;
             border: 1px solid var(--glass-border);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
         }
 
         .dropdown-trigger:hover .dropdown {
@@ -134,6 +252,7 @@
             padding: 0.75rem 1rem;
             border-radius: 8px;
             transition: all var(--transition-speed) ease;
+            cursor: pointer;
         }
 
         .dropdown-item:hover {
@@ -144,11 +263,12 @@
         /* Page Container */
         .page {
             display: none;
-            padding-top: 100px;
+            padding-top: calc(var(--nav-height) + 20px);
             min-height: 100vh;
-            animation: fadeIn 0.8s ease-out;
+            animation: fadeIn 0.5s ease-out;
             position: relative;
             z-index: 1;
+            padding-bottom: calc(var(--safe-area-inset-bottom) + 20px);
         }
 
         .page.active {
@@ -158,18 +278,18 @@
         .container {
             max-width: 1400px;
             margin: 0 auto;
-            padding: 2rem;
+            padding: 1rem;
         }
 
         /* Hero Section */
         .hero-title {
             text-align: center;
-            margin-bottom: 3rem;
+            margin-bottom: 2rem;
             animation: slideUp 0.8s ease-out;
         }
 
         .hero-title h1 {
-            font-size: clamp(2rem, 5vw, 3.5rem);
+            font-size: clamp(1.75rem, 6vw, 3.5rem);
             margin-bottom: 0.5rem;
             background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-purple) 100%);
             -webkit-background-clip: text;
@@ -179,7 +299,7 @@
         }
 
         .subtitle {
-            font-size: 1.2rem;
+            font-size: clamp(1rem, 3vw, 1.2rem);
             color: var(--text-secondary);
             font-weight: 300;
         }
@@ -190,15 +310,13 @@
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
             border: 1px solid var(--glass-border);
-            border-radius: 20px;
-            padding: 2rem;
-            margin-bottom: 4rem;
-            animation: slideUp 1s ease-out 0.2s both;
-            overflow: hidden;
-            position: relative;
+            border-radius: 16px;
+            padding: 1rem;
+            margin-bottom: 2rem;
+            animation: slideUp 0.8s ease-out 0.2s both;
         }
 
-        .video-placeholder {
+        .video-container {
             width: 100%;
             aspect-ratio: 16/9;
             background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
@@ -206,40 +324,40 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.5rem;
-            color: var(--text-secondary);
-            position: relative;
             overflow: hidden;
+            position: relative;
         }
 
-        .video-placeholder::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-            animation: shimmer 3s infinite;
+        .video-container video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 12px;
+        }
+
+        .video-placeholder {
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+            text-align: center;
+            padding: 2rem;
         }
 
         /* Section Titles */
         .section-title {
             text-align: center;
-            font-size: 2.5rem;
-            margin: 3rem 0;
+            font-size: clamp(1.5rem, 4vw, 2.5rem);
+            margin: 2rem 0;
             background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-purple) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            animation: slideUp 1s ease-out 0.4s both;
         }
 
         /* Asset Grid */
         .asset-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 2rem;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
             margin-top: 2rem;
         }
 
@@ -252,131 +370,117 @@
             padding: 1.5rem;
             cursor: pointer;
             transition: all var(--transition-speed) ease;
-            animation: slideUp 1s ease-out 0.6s both;
             position: relative;
             overflow: hidden;
+            animation: slideUp 0.8s ease-out;
         }
 
-        .asset-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
-            opacity: 0;
-            transition: opacity var(--transition-speed) ease;
-            pointer-events: none;
-        }
-
-        .asset-card:hover {
-            transform: translateY(-5px);
-            border-color: rgba(102, 126, 234, 0.3);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-        }
-
-        .asset-card:hover::before {
-            opacity: 1;
+        .asset-card:active {
+            transform: scale(0.98);
         }
 
         .asset-card h3 {
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
-            position: relative;
+            font-size: 1.25rem;
+            margin-bottom: 0.75rem;
+            color: var(--text-primary);
         }
 
         .asset-card p {
             color: var(--text-secondary);
-            line-height: 1.6;
-            position: relative;
+            line-height: 1.5;
+            font-size: 0.95rem;
         }
 
         /* Project Pages */
         .project-header {
             text-align: center;
-            margin-bottom: 3rem;
+            margin-bottom: 2rem;
         }
 
         .project-description {
             max-width: 800px;
-            margin: 0 auto 3rem;
+            margin: 0 auto 2rem;
             color: var(--text-secondary);
-            line-height: 1.8;
-            font-size: 1.1rem;
+            line-height: 1.6;
+            font-size: 1rem;
+            padding: 0 1rem;
         }
 
         /* Render Gallery */
         .render-gallery {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
-            gap: 2rem;
-            margin-bottom: 4rem;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
         }
 
         .render-image {
             background: var(--glass-bg);
             backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
             border: 1px solid var(--glass-border);
             border-radius: 16px;
-            padding: 1rem;
-            aspect-ratio: 16/9;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--text-secondary);
-            transition: all var(--transition-speed) ease;
+            padding: 0.75rem;
+            overflow: hidden;
         }
 
-        .render-image:hover {
-            transform: scale(1.02);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-        }
-
-        /* 3D Model Viewers */
-        .models-section {
-            margin-top: 4rem;
-        }
-
-        .models-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 2rem;
-        }
-
-        .model-viewer {
-            background: var(--glass-bg);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid var(--glass-border);
-            border-radius: 16px;
-            padding: 1.5rem;
-        }
-
-        .viewer-canvas {
+        .render-placeholder {
             width: 100%;
-            aspect-ratio: 1;
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
+            aspect-ratio: 16/9;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
             border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
             color: var(--text-secondary);
-            margin-bottom: 1rem;
-            position: relative;
-            overflow: hidden;
+            font-size: 0.9rem;
+            text-align: center;
         }
 
-        .viewer-canvas::after {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255, 255, 255, 0.05) 0%, transparent 70%);
-            animation: rotate 20s linear infinite;
+        .render-image img {
+            width: 100%;
+            height: auto;
+            border-radius: 12px;
+            display: block;
+        }
+
+        /* 3D Model Viewers */
+        .models-section {
+            margin-top: 2rem;
+        }
+
+        .models-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        .model-viewer {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 1rem;
+        }
+
+        .model-viewer h4 {
+            text-align: center;
+            margin-bottom: 0.75rem;
+            color: var(--text-primary);
+            font-size: 1.1rem;
+        }
+
+        .model-canvas {
+            width: 100%;
+            aspect-ratio: 1;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
+            border-radius: 12px;
+            display: block;
+            touch-action: none;
+            cursor: grab;
+        }
+
+        .model-canvas:active {
+            cursor: grabbing;
         }
 
         /* Viewer Controls */
@@ -384,67 +488,79 @@
             display: flex;
             gap: 0.5rem;
             justify-content: center;
+            margin-top: 0.75rem;
+            flex-wrap: wrap;
         }
 
         .view-btn {
-            padding: 0.5rem 1rem;
+            flex: 1;
+            min-width: 80px;
+            padding: 0.6rem 0.8rem;
             background: rgba(102, 126, 234, 0.1);
             border: 1px solid rgba(102, 126, 234, 0.3);
             border-radius: 8px;
             color: var(--text-primary);
             cursor: pointer;
             transition: all var(--transition-speed) ease;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
+            outline: none;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        .view-btn:hover {
-            background: rgba(102, 126, 234, 0.2);
-            transform: translateY(-2px);
+        .view-btn:active {
+            transform: scale(0.95);
         }
 
         .view-btn.active {
             background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
             border-color: transparent;
+            color: white;
         }
 
-        /* Glass Hover Effect */
-        .glass-hover {
-            position: relative;
-            overflow: hidden;
-        }
-
-        .glass-hover::after {
-            content: '';
+        /* Loading Spinner */
+        .model-loading {
             position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
-            opacity: 0;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: var(--text-secondary);
+            text-align: center;
             pointer-events: none;
-            transition: opacity var(--transition-speed) ease;
+            font-size: 0.9rem;
         }
 
-        .glass-hover:hover::after {
-            opacity: 1;
+        .spinner {
+            width: 30px;
+            height: 30px;
+            margin: 0 auto 0.5rem;
+            border: 2px solid var(--glass-border);
+            border-top-color: var(--accent-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        /* Swipe Indicator */
+        .swipe-indicator {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 0.5rem 1rem;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            z-index: 100;
+            animation: pulse 2s infinite;
         }
 
         /* Animations */
-        @keyframes slideDown {
-            from {
-                transform: translateY(-100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-
         @keyframes slideUp {
             from {
-                transform: translateY(30px);
+                transform: translateY(20px);
                 opacity: 0;
             }
             to {
@@ -454,50 +570,142 @@
         }
 
         @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-            to {
-                opacity: 1;
-            }
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
-        @keyframes shimmer {
-            0% {
-                transform: translate(-100%, -100%) rotate(45deg);
-            }
-            100% {
-                transform: translate(100%, 100%) rotate(45deg);
-            }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
 
-        @keyframes rotate {
-            0% {
-                transform: rotate(0deg);
-            }
-            100% {
-                transform: rotate(360deg);
-            }
+        @keyframes pulse {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
         }
 
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .nav-menu {
-                gap: 1rem;
+        /* Tablet Styles */
+        @media (min-width: 768px) {
+            .container {
+                padding: 2rem;
             }
-            
-            .asset-grid,
-            .models-grid,
+
+            .asset-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
             .render-gallery {
-                grid-template-columns: 1fr;
+                grid-template-columns: repeat(2, 1fr);
             }
-            
-            .hero-title h1 {
-                font-size: 2rem;
+
+            .models-grid {
+                grid-template-columns: repeat(2, 1fr);
             }
-            
-            .section-title {
-                font-size: 1.8rem;
+
+            .demo-reel {
+                padding: 1.5rem;
+            }
+
+            .project-description {
+                font-size: 1.1rem;
+            }
+        }
+
+        /* Desktop Styles */
+        @media (min-width: 1024px) {
+            .asset-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 2rem;
+            }
+
+            .models-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .demo-reel {
+                padding: 2rem;
+                border-radius: 20px;
+            }
+
+            .hero-title {
+                margin-bottom: 3rem;
+            }
+
+            .mobile-menu-btn {
+                display: none !important;
+            }
+
+            .mobile-nav-overlay {
+                display: none !important;
+            }
+
+            .view-btn {
+                min-width: auto;
+                padding: 0.5rem 1rem;
+            }
+        }
+
+        /* Mobile-specific styles */
+        @media (max-width: 767px) {
+            .nav-menu {
+                display: none;
+            }
+
+            .mobile-menu-btn {
+                display: block;
+            }
+
+            .mobile-nav-overlay {
+                display: block;
+            }
+
+            .dropdown {
+                display: none;
+            }
+
+            /* Optimize for touch */
+            .asset-card,
+            .view-btn,
+            .mobile-nav-item {
+                min-height: 44px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                flex-direction: column;
+            }
+
+            .asset-card {
+                padding: 1.25rem;
+                justify-content: flex-start;
+                align-items: flex-start;
+            }
+
+            .swipe-indicator {
+                display: block;
+            }
+        }
+
+        /* iOS-specific fixes */
+        @supports (-webkit-touch-callout: none) {
+            body {
+                -webkit-user-select: none;
+                user-select: none;
+            }
+
+            .model-canvas {
+                -webkit-touch-callout: none;
+                -webkit-user-select: none;
+            }
+        }
+
+        /* Reduce motion for accessibility */
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
             }
         }
     </style>
@@ -507,6 +715,8 @@
     <nav class="navbar">
         <div class="nav-container">
             <div class="logo" onclick="showPage('landing')">AS</div>
+            
+            <!-- Desktop Menu -->
             <div class="nav-menu">
                 <div class="nav-item" onclick="showPage('landing')">Demo Reel</div>
                 <div class="nav-item dropdown-trigger">
@@ -519,8 +729,46 @@
                 </div>
                 <div class="nav-item" onclick="downloadResume()">Resume</div>
             </div>
+
+            <!-- Mobile Menu Button -->
+            <div class="mobile-menu-btn" onclick="toggleMobileMenu()">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
         </div>
     </nav>
+
+    <!-- Mobile Navigation Overlay -->
+    <div class="mobile-nav-overlay" id="mobileNav">
+        <div class="mobile-nav-content">
+            <div class="mobile-nav-item" onclick="showPage('landing'); closeMobileMenu()">
+                Demo Reel
+            </div>
+            <div class="mobile-nav-item">
+                Asset Packs
+                <div class="mobile-nav-submenu">
+                    <div class="mobile-nav-subitem" onclick="showPage('casino'); closeMobileMenu()">
+                        Casino Bar
+                    </div>
+                    <div class="mobile-nav-subitem" onclick="showPage('egyptian'); closeMobileMenu()">
+                        Egyptian Casino
+                    </div>
+                    <div class="mobile-nav-subitem" onclick="showPage('vault'); closeMobileMenu()">
+                        Bank Vault
+                    </div>
+                </div>
+            </div>
+            <div class="mobile-nav-item" onclick="downloadResume(); closeMobileMenu()">
+                Resume
+            </div>
+        </div>
+    </div>
+
+    <!-- Swipe Indicator -->
+    <div class="swipe-indicator" id="swipeIndicator">
+        ← Swipe to navigate →
+    </div>
 
     <!-- Landing Page -->
     <div id="landing" class="page active">
@@ -530,26 +778,29 @@
                 <p class="subtitle">3D Generalist and Game Designer</p>
             </div>
 
-            <div class="demo-reel glass-hover">
-                <div class="video-placeholder">
-                    [Demo Reel Video - assets/videos/demo-reel.mp4]
+            <div class="demo-reel">
+                <div class="video-container">
+                    <div class="video-placeholder">
+                        Demo Reel Video<br>
+                        <small>assets/videos/demo-reel.mp4</small>
+                    </div>
                 </div>
             </div>
 
             <h2 class="section-title">Game Asset Sets</h2>
 
             <div class="asset-grid">
-                <div class="asset-card glass-hover" onclick="showPage('casino')">
+                <div class="asset-card" onclick="showPage('casino')">
                     <h3>Casino Bar Game Assets</h3>
-                    <p>A complete set of stylized casino bar assets perfect for gaming environments. Includes furniture, decorations, and atmospheric elements.</p>
+                    <p>A complete set of stylized casino bar assets perfect for gaming environments.</p>
                 </div>
-                <div class="asset-card glass-hover" onclick="showPage('egyptian')">
+                <div class="asset-card" onclick="showPage('egyptian')">
                     <h3>Egyptian Casino Game Assets</h3>
-                    <p>Ancient Egyptian themed casino assets combining historical aesthetics with modern gaming elements. Rich textures and detailed hieroglyphics.</p>
+                    <p>Ancient Egyptian themed casino assets with rich textures and hieroglyphics.</p>
                 </div>
-                <div class="asset-card glass-hover" onclick="showPage('vault')">
+                <div class="asset-card" onclick="showPage('vault')">
                     <h3>Bank Vault Game Assets</h3>
-                    <p>High-security bank vault environment assets. Features intricate locking mechanisms, safety deposit boxes, and metallic surfaces.</p>
+                    <p>High-security bank vault environment with intricate mechanical details.</p>
                 </div>
             </div>
         </div>
@@ -561,43 +812,47 @@
             <div class="project-header">
                 <h1 class="section-title">Casino Bar Game Assets</h1>
                 <p class="project-description">
-                    This comprehensive asset pack brings the excitement and glamour of a high-end casino bar to life. 
-                    Featuring meticulously crafted 3D models with PBR textures, this collection includes everything 
-                    from elegant bar counters and stools to slot machines and decorative elements. Each asset is 
-                    optimized for real-time rendering while maintaining exceptional visual quality.
+                    This comprehensive asset pack brings the excitement and glamour of a high-end casino bar to life with meticulously crafted 3D models and PBR textures.
                 </p>
             </div>
 
             <div class="render-gallery">
-                <div class="render-image glass-hover">[Main Render 1 - casino-bar-scene.jpg]</div>
-                <div class="render-image glass-hover">[Main Render 2 - casino-assets-all.jpg]</div>
+                <div class="render-image">
+                    <div class="render-placeholder">Casino Bar Scene</div>
+                </div>
+                <div class="render-image">
+                    <div class="render-placeholder">Casino Assets Collection</div>
+                </div>
             </div>
 
             <div class="models-section">
                 <h3 class="section-title">Featured Assets</h3>
                 <div class="models-grid">
                     <div class="model-viewer">
-                        <div class="viewer-canvas glass-hover">[3D Model: Bar Counter]</div>
+                        <h4>Bar Counter</h4>
+                        <canvas class="model-canvas" id="casino-model-1"></canvas>
                         <div class="viewer-controls">
-                            <button class="view-btn active" onclick="setView(this, 'solid')">Solid</button>
-                            <button class="view-btn" onclick="setView(this, 'wireframe')">Wireframe</button>
-                            <button class="view-btn" onclick="setView(this, 'textured')">Textured</button>
+                            <button class="view-btn active" onclick="setViewMode('casino-model-1', 'textured', this)">Textured</button>
+                            <button class="view-btn" onclick="setViewMode('casino-model-1', 'solid', this)">Solid</button>
+                            <button class="view-btn" onclick="setViewMode('casino-model-1', 'wireframe', this)">Wireframe</button>
                         </div>
                     </div>
                     <div class="model-viewer">
-                        <div class="viewer-canvas glass-hover">[3D Model: Slot Machine]</div>
+                        <h4>Slot Machine</h4>
+                        <canvas class="model-canvas" id="casino-model-2"></canvas>
                         <div class="viewer-controls">
-                            <button class="view-btn active" onclick="setView(this, 'solid')">Solid</button>
-                            <button class="view-btn" onclick="setView(this, 'wireframe')">Wireframe</button>
-                            <button class="view-btn" onclick="setView(this, 'textured')">Textured</button>
+                            <button class="view-btn active" onclick="setViewMode('casino-model-2', 'textured', this)">Textured</button>
+                            <button class="view-btn" onclick="setViewMode('casino-model-2', 'solid', this)">Solid</button>
+                            <button class="view-btn" onclick="setViewMode('casino-model-2', 'wireframe', this)">Wireframe</button>
                         </div>
                     </div>
                     <div class="model-viewer">
-                        <div class="viewer-canvas glass-hover">[3D Model: Cocktail Glass Set]</div>
+                        <h4>Cocktail Glass Set</h4>
+                        <canvas class="model-canvas" id="casino-model-3"></canvas>
                         <div class="viewer-controls">
-                            <button class="view-btn active" onclick="setView(this, 'solid')">Solid</button>
-                            <button class="view-btn" onclick="setView(this, 'wireframe')">Wireframe</button>
-                            <button class="view-btn" onclick="setView(this, 'textured')">Textured</button>
+                            <button class="view-btn active" onclick="setViewMode('casino-model-3', 'textured', this)">Textured</button>
+                            <button class="view-btn" onclick="setViewMode('casino-model-3', 'solid', this)">Solid</button>
+                            <button class="view-btn" onclick="setViewMode('casino-model-3', 'wireframe', this)">Wireframe</button>
                         </div>
                     </div>
                 </div>
@@ -611,43 +866,47 @@
             <div class="project-header">
                 <h1 class="section-title">Egyptian Casino Game Assets</h1>
                 <p class="project-description">
-                    Transport players to an ancient world of pharaohs and pyramids with this unique Egyptian-themed 
-                    casino asset collection. This pack seamlessly blends traditional Egyptian architectural elements 
-                    with modern casino gaming equipment. Gold accents, hieroglyphic details, and ornate decorations 
-                    create an immersive atmosphere that stands out in any gaming environment.
+                    Ancient Egyptian themed casino assets combining historical aesthetics with modern gaming elements.
                 </p>
             </div>
 
             <div class="render-gallery">
-                <div class="render-image glass-hover">[Main Render 1 - egyptian-casino-hall.jpg]</div>
-                <div class="render-image glass-hover">[Main Render 2 - egyptian-assets-all.jpg]</div>
+                <div class="render-image">
+                    <div class="render-placeholder">Egyptian Casino Hall</div>
+                </div>
+                <div class="render-image">
+                    <div class="render-placeholder">Egyptian Assets Collection</div>
+                </div>
             </div>
 
             <div class="models-section">
                 <h3 class="section-title">Featured Assets</h3>
                 <div class="models-grid">
                     <div class="model-viewer">
-                        <div class="viewer-canvas glass-hover">[3D Model: Pharaoh Slot Machine]</div>
+                        <h4>Pharaoh Slot Machine</h4>
+                        <canvas class="model-canvas" id="egyptian-model-1"></canvas>
                         <div class="viewer-controls">
-                            <button class="view-btn active" onclick="setView(this, 'solid')">Solid</button>
-                            <button class="view-btn" onclick="setView(this, 'wireframe')">Wireframe</button>
-                            <button class="view-btn" onclick="setView(this, 'textured')">Textured</button>
+                            <button class="view-btn active" onclick="setViewMode('egyptian-model-1', 'textured', this)">Textured</button>
+                            <button class="view-btn" onclick="setViewMode('egyptian-model-1', 'solid', this)">Solid</button>
+                            <button class="view-btn" onclick="setViewMode('egyptian-model-1', 'wireframe', this)">Wireframe</button>
                         </div>
                     </div>
                     <div class="model-viewer">
-                        <div class="viewer-canvas glass-hover">[3D Model: Anubis Statue]</div>
+                        <h4>Anubis Statue</h4>
+                        <canvas class="model-canvas" id="egyptian-model-2"></canvas>
                         <div class="viewer-controls">
-                            <button class="view-btn active" onclick="setView(this, 'solid')">Solid</button>
-                            <button class="view-btn" onclick="setView(this, 'wireframe')">Wireframe</button>
-                            <button class="view-btn" onclick="setView(this, 'textured')">Textured</button>
+                            <button class="view-btn active" onclick="setViewMode('egyptian-model-2', 'textured', this)">Textured</button>
+                            <button class="view-btn" onclick="setViewMode('egyptian-model-2', 'solid', this)">Solid</button>
+                            <button class="view-btn" onclick="setViewMode('egyptian-model-2', 'wireframe', this)">Wireframe</button>
                         </div>
                     </div>
                     <div class="model-viewer">
-                        <div class="viewer-canvas glass-hover">[3D Model: Hieroglyphic Wall Panel]</div>
+                        <h4>Hieroglyphic Wall Panel</h4>
+                        <canvas class="model-canvas" id="egyptian-model-3"></canvas>
                         <div class="viewer-controls">
-                            <button class="view-btn active" onclick="setView(this, 'solid')">Solid</button>
-                            <button class="view-btn" onclick="setView(this, 'wireframe')">Wireframe</button>
-                            <button class="view-btn" onclick="setView(this, 'textured')">Textured</button>
+                            <button class="view-btn active" onclick="setViewMode('egyptian-model-3', 'textured', this)">Textured</button>
+                            <button class="view-btn" onclick="setViewMode('egyptian-model-3', 'solid', this)">Solid</button>
+                            <button class="view-btn" onclick="setViewMode('egyptian-model-3', 'wireframe', this)">Wireframe</button>
                         </div>
                     </div>
                 </div>
@@ -661,43 +920,47 @@
             <div class="project-header">
                 <h1 class="section-title">Bank Vault Game Assets</h1>
                 <p class="project-description">
-                    Step into the high-security world of bank vaults with this meticulously detailed asset pack. 
-                    Perfect for heist games, puzzle adventures, or atmospheric environments, this collection features 
-                    realistic vault doors, safety deposit boxes, security systems, and authentic bank vault furniture. 
-                    Each model showcases intricate mechanical details and weathered metallic surfaces that tell a story.
+                    High-security bank vault environment assets with intricate mechanical details and weathered metallic surfaces.
                 </p>
             </div>
 
             <div class="render-gallery">
-                <div class="render-image glass-hover">[Main Render 1 - vault-interior.jpg]</div>
-                <div class="render-image glass-hover">[Main Render 2 - vault-security.jpg]</div>
+                <div class="render-image">
+                    <div class="render-placeholder">Vault Interior</div>
+                </div>
+                <div class="render-image">
+                    <div class="render-placeholder">Security Elements</div>
+                </div>
             </div>
 
             <div class="models-section">
                 <h3 class="section-title">Featured Assets</h3>
                 <div class="models-grid">
                     <div class="model-viewer">
-                        <div class="viewer-canvas glass-hover">[3D Model: Vault Door]</div>
+                        <h4>Vault Door</h4>
+                        <canvas class="model-canvas" id="vault-model-1"></canvas>
                         <div class="viewer-controls">
-                            <button class="view-btn active" onclick="setView(this, 'solid')">Solid</button>
-                            <button class="view-btn" onclick="setView(this, 'wireframe')">Wireframe</button>
-                            <button class="view-btn" onclick="setView(this, 'textured')">Textured</button>
+                            <button class="view-btn active" onclick="setViewMode('vault-model-1', 'textured', this)">Textured</button>
+                            <button class="view-btn" onclick="setViewMode('vault-model-1', 'solid', this)">Solid</button>
+                            <button class="view-btn" onclick="setViewMode('vault-model-1', 'wireframe', this)">Wireframe</button>
                         </div>
                     </div>
                     <div class="model-viewer">
-                        <div class="viewer-canvas glass-hover">[3D Model: Safety Deposit Boxes]</div>
+                        <h4>Safety Deposit Boxes</h4>
+                        <canvas class="model-canvas" id="vault-model-2"></canvas>
                         <div class="viewer-controls">
-                            <button class="view-btn active" onclick="setView(this, 'solid')">Solid</button>
-                            <button class="view-btn" onclick="setView(this, 'wireframe')">Wireframe</button>
-                            <button class="view-btn" onclick="setView(this, 'textured')">Textured</button>
+                            <button class="view-btn active" onclick="setViewMode('vault-model-2', 'textured', this)">Textured</button>
+                            <button class="view-btn" onclick="setViewMode('vault-model-2', 'solid', this)">Solid</button>
+                            <button class="view-btn" onclick="setViewMode('vault-model-2', 'wireframe', this)">Wireframe</button>
                         </div>
                     </div>
                     <div class="model-viewer">
-                        <div class="viewer-canvas glass-hover">[3D Model: Security Camera System]</div>
+                        <h4>Security Camera System</h4>
+                        <canvas class="model-canvas" id="vault-model-3"></canvas>
                         <div class="viewer-controls">
-                            <button class="view-btn active" onclick="setView(this, 'solid')">Solid</button>
-                            <button class="view-btn" onclick="setView(this, 'wireframe')">Wireframe</button>
-                            <button class="view-btn" onclick="setView(this, 'textured')">Textured</button>
+                            <button class="view-btn active" onclick="setViewMode('vault-model-3', 'textured', this)">Textured</button>
+                            <button class="view-btn" onclick="setViewMode('vault-model-3', 'solid', this)">Solid</button>
+                            <button class="view-btn" onclick="setViewMode('vault-model-3', 'wireframe', this)">Wireframe</button>
                         </div>
                     </div>
                 </div>
@@ -706,90 +969,76 @@
     </div>
 
     <script>
-        // Asset paths configuration
-        const assetPaths = {
-            video: {
-                demoReel: 'assets/videos/demo-reel.mp4'
-            },
-            images: {
-                renders: {
-                    casino: {
-                        scene: 'assets/images/renders/casino/casino-bar-scene.jpg',
-                        assets: 'assets/images/renders/casino/casino-assets-all.jpg'
-                    },
-                    egyptian: {
-                        hall: 'assets/images/renders/egyptian/egyptian-casino-hall.jpg',
-                        assets: 'assets/images/renders/egyptian/egyptian-assets-all.jpg'
-                    },
-                    vault: {
-                        interior: 'assets/images/renders/vault/vault-interior.jpg',
-                        security: 'assets/images/renders/vault/vault-security.jpg'
-                    }
-                }
-            },
-            models: {
-                casino: {
-                    barCounter: 'assets/models/casino/bar-counter/bar-counter.glb',
-                    slotMachine: 'assets/models/casino/slot-machine/slot-machine.glb',
-                    cocktailGlass: 'assets/models/casino/cocktail-glass/cocktail-glass.glb'
-                },
-                egyptian: {
-                    pharaohSlot: 'assets/models/egyptian/pharaoh-slot/pharaoh-slot.glb',
-                    anubisStatue: 'assets/models/egyptian/anubis-statue/anubis-statue.glb',
-                    wallPanel: 'assets/models/egyptian/wall-panel/wall-panel.glb'
-                },
-                vault: {
-                    vaultDoor: 'assets/models/vault/vault-door/vault-door.glb',
-                    depositBoxes: 'assets/models/vault/deposit-boxes/deposit-boxes.glb',
-                    securityCamera: 'assets/models/vault/security-camera/security-camera.glb'
-                }
-            },
-            documents: {
-                resume: 'assets/documents/resume.pdf'
+        // Mobile menu toggle
+        function toggleMobileMenu() {
+            const btn = document.querySelector('.mobile-menu-btn');
+            const overlay = document.getElementById('mobileNav');
+            btn.classList.toggle('active');
+            overlay.classList.toggle('active');
+            
+            // Prevent body scroll when menu is open
+            if (overlay.classList.contains('active')) {
+                document.body.style.overflow = 'hidden';
+            } else {
+                document.body.style.overflow = '';
             }
-        };
+        }
+
+        function closeMobileMenu() {
+            const btn = document.querySelector('.mobile-menu-btn');
+            const overlay = document.getElementById('mobileNav');
+            btn.classList.remove('active');
+            overlay.classList.remove('active');
+            document.body.style.overflow = '';
+        }
 
         // Page navigation
         function showPage(pageId) {
-            // Hide all pages
             const pages = document.querySelectorAll('.page');
             pages.forEach(page => {
                 page.classList.remove('active');
             });
             
-            // Show selected page
             const selectedPage = document.getElementById(pageId);
             if (selectedPage) {
                 selectedPage.classList.add('active');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
+                
+                // Initialize 3D models when page is shown (only on desktop/tablet)
+                if (window.innerWidth > 767 && pageId !== 'landing') {
+                    setTimeout(() => initPageModels(pageId), 100);
+                }
+            }
+            
+            // Hide swipe indicator after first navigation
+            const indicator = document.getElementById('swipeIndicator');
+            if (indicator) {
+                setTimeout(() => {
+                    indicator.style.display = 'none';
+                }, 3000);
             }
         }
 
-        // View toggle for 3D models
-        function setView(button, viewType) {
-            // Remove active class from siblings
-            const buttons = button.parentElement.querySelectorAll('.view-btn');
-            buttons.forEach(btn => btn.classList.remove('active'));
-            
-            // Add active class to clicked button
-            button.classList.add('active');
-            
-            // Update viewer display (placeholder functionality)
-            const viewer = button.closest('.model-viewer').querySelector('.viewer-canvas');
-            viewer.setAttribute('data-view', viewType);
-            
-            // Add animation effect
-            viewer.style.animation = 'none';
-            setTimeout(() => {
-                viewer.style.animation = 'fadeIn 0.5s ease-out';
-            }, 10);
+        // Initialize 3D models for a page
+        function initPageModels(pageId) {
+            // Placeholder for 3D model initialization
+            console.log('Initializing models for:', pageId);
         }
 
-        // Download resume function
+        // View mode toggle
+        function setViewMode(canvasId, mode, button) {
+            const buttons = button.parentElement.querySelectorAll('.view-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+            
+            // Placeholder for view mode change
+            console.log('Setting view mode:', mode, 'for', canvasId);
+        }
+
+        // Download resume
         function downloadResume() {
-            // Create a temporary link to download
             const link = document.createElement('a');
-            link.href = assetPaths.documents.resume;
+            link.href = 'assets/documents/resume.pdf';
             link.download = 'Aidan_Stephenson_Resume.pdf';
             link.target = '_blank';
             document.body.appendChild(link);
@@ -797,59 +1046,294 @@
             document.body.removeChild(link);
         }
 
-        // Add smooth parallax scrolling effect
-        window.addEventListener('scroll', () => {
-            const scrolled = window.pageYOffset;
-            const parallax = document.querySelector('body');
-            parallax.style.backgroundPositionY = -(scrolled * 0.5) + 'px';
-        });
+        // Touch gestures for swipe navigation
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let touchEndX = 0;
+        let touchEndY = 0;
+        const minSwipeDistance = 50;
 
-        // Add cursor glow effect
-        document.addEventListener('mousemove', (e) => {
-            const cards = document.querySelectorAll('.asset-card, .model-viewer, .render-image');
-            cards.forEach(card => {
-                const rect = card.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
-                
-                if (x >= 0 && x <= rect.width && y >= 0 && y <= rect.height) {
-                    card.style.background = `radial-gradient(circle at ${x}px ${y}px, rgba(102, 126, 234, 0.15), rgba(21, 25, 49, 0.5))`;
-                }
-            });
-        });
+        document.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+            touchStartY = e.changedTouches[0].screenY;
+        }, { passive: true });
 
-        // Handle keyboard navigation
-        document.addEventListener('keydown', (e) => {
-            const pageOrder = ['landing', 'casino', 'egyptian', 'vault'];
-            const currentPage = document.querySelector('.page.active');
+        document.addEventListener('touchend', (e) => {
+            touchEndX = e.changedTouches[0].screenX;
+            touchEndY = e.changedTouches[0].screenY;
+            handleSwipe();
+        }, { passive: true });
+
+        function handleSwipe() {
+            const diffX = touchStartX - touchEndX;
+            const diffY = Math.abs(touchStartY - touchEndY);
             
-            if (currentPage) {
-                const currentId = currentPage.id;
-                const currentIndex = pageOrder.indexOf(currentId);
+            // Only handle horizontal swipes
+            if (Math.abs(diffX) > minSwipeDistance && diffY < 100) {
+                const pageOrder = ['landing', 'casino', 'egyptian', 'vault'];
+                const currentPage = document.querySelector('.page.active');
                 
-                if (e.key === 'ArrowLeft' && currentIndex > 0) {
-                    showPage(pageOrder[currentIndex - 1]);
-                } else if (e.key === 'ArrowRight' && currentIndex < pageOrder.length - 1) {
-                    showPage(pageOrder[currentIndex + 1]);
-                } else if (e.key === 'Escape') {
-                    showPage('landing');
+                if (currentPage) {
+                    const currentId = currentPage.id;
+                    const currentIndex = pageOrder.indexOf(currentId);
+                    
+                    if (diffX > 0 && currentIndex < pageOrder.length - 1) {
+                        // Swipe left - next page
+                        showPage(pageOrder[currentIndex + 1]);
+                    } else if (diffX < 0 && currentIndex > 0) {
+                        // Swipe right - previous page
+                        showPage(pageOrder[currentIndex - 1]);
+                    }
+                }
+            }
+        }
+
+        // Keyboard navigation (for desktop)
+        document.addEventListener('keydown', (e) => {
+            if (window.innerWidth > 767) {
+                const pageOrder = ['landing', 'casino', 'egyptian', 'vault'];
+                const currentPage = document.querySelector('.page.active');
+                
+                if (currentPage) {
+                    const currentId = currentPage.id;
+                    const currentIndex = pageOrder.indexOf(currentId);
+                    
+                    if (e.key === 'ArrowLeft' && currentIndex > 0) {
+                        showPage(pageOrder[currentIndex - 1]);
+                    } else if (e.key === 'ArrowRight' && currentIndex < pageOrder.length - 1) {
+                        showPage(pageOrder[currentIndex + 1]);
+                    } else if (e.key === 'Escape') {
+                        showPage('landing');
+                        closeMobileMenu();
+                    }
                 }
             }
         });
 
+        // Prevent zoom on double tap for iOS
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', (e) => {
+            const now = Date.now();
+            if (now - lastTouchEnd <= 300) {
+                e.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
+
+        // Handle orientation change
+        window.addEventListener('orientationchange', () => {
+            setTimeout(() => {
+                window.scrollTo(0, 0);
+            }, 100);
+        });
+
         // Initialize on load
         document.addEventListener('DOMContentLoaded', () => {
-            // Add hover effect to navigation items
-            const navItems = document.querySelectorAll('.nav-item, .dropdown-item');
-            navItems.forEach(item => {
-                item.addEventListener('mouseenter', function() {
-                    this.style.transform = 'translateY(-2px)';
-                });
-                item.addEventListener('mouseleave', function() {
-                    this.style.transform = 'translateY(0)';
-                });
-            });
+            // Set viewport height for mobile browsers
+            const setVH = () => {
+                const vh = window.innerHeight * 0.01;
+                document.documentElement.style.setProperty('--vh', `${vh}px`);
+            };
+            setVH();
+            window.addEventListener('resize', setVH);
+            
+            // Hide swipe indicator on desktop
+            if (window.innerWidth > 767) {
+                const indicator = document.getElementById('swipeIndicator');
+                if (indicator) indicator.style.display = 'none';
+            }
+            
+            // Check for URL hash
+            if (window.location.hash) {
+                const pageId = window.location.hash.substring(1);
+                showPage(pageId);
+            }
         });
+
+// Store all 3D viewer instances
+const viewers = {};
+
+// Initialize 3D model viewer
+function init3DModel(canvasId, modelPath) {
+    console.log('Loading model:', modelPath);
+    
+    const canvas = document.getElementById(canvasId);
+    if (!canvas || viewers[canvasId]) return;
+
+    // Show loading state
+    const loadingDiv = document.createElement('div');
+    loadingDiv.className = 'model-loading';
+    loadingDiv.innerHTML = '<div class="spinner"></div><div>Loading Model...</div>';
+    canvas.parentElement.style.position = 'relative';
+    canvas.parentElement.appendChild(loadingDiv);
+
+    // Create scene
+    const scene = new THREE.Scene();
+    scene.background = null;
+
+    // Setup camera
+    const camera = new THREE.PerspectiveCamera(
+        45,
+        canvas.clientWidth / canvas.clientHeight,
+        0.1,
+        1000
+    );
+    camera.position.set(5, 5, 5);
+
+    // Setup renderer
+    const renderer = new THREE.WebGLRenderer({
+        canvas: canvas,
+        antialias: true,
+        alpha: true
+    });
+    renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+    // Add lights
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    scene.add(ambientLight);
+    
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    directionalLight.position.set(5, 10, 5);
+    directionalLight.castShadow = true;
+    scene.add(directionalLight);
+
+    // Add controls
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.autoRotate = true;
+    controls.autoRotateSpeed = 1.0;
+
+    // Store viewer
+    viewers[canvasId] = {
+        scene: scene,
+        camera: camera,
+        renderer: renderer,
+        controls: controls,
+        model: null,
+        originalMaterials: new Map()
+    };
+
+    // Load model with GLTFLoader
+    const loader = new THREE.GLTFLoader();
+    
+    loader.load(
+        modelPath,
+        // Success callback
+        (gltf) => {
+            console.log('Model loaded successfully!');
+            const model = gltf.scene;
+            
+            // Center and scale model
+            const box = new THREE.Box3().setFromObject(model);
+            const center = box.getCenter(new THREE.Vector3());
+            const size = box.getSize(new THREE.Vector3());
+            const maxDim = Math.max(size.x, size.y, size.z);
+            const scale = 4 / maxDim;
+            
+            model.scale.setScalar(scale);
+            model.position.sub(center.multiplyScalar(scale));
+            
+            // Process materials
+            model.traverse((child) => {
+                if (child.isMesh) {
+                    child.castShadow = true;
+                    child.receiveShadow = true;
+                    viewers[canvasId].originalMaterials.set(child, child.material);
+                }
+            });
+            
+            scene.add(model);
+            viewers[canvasId].model = model;
+            
+            // Remove loading indicator
+            loadingDiv.remove();
+        },
+        // Progress callback
+        (xhr) => {
+            if (xhr.total > 0) {
+                const percent = (xhr.loaded / xhr.total) * 100;
+                loadingDiv.querySelector('div:last-child').textContent = `Loading: ${percent.toFixed(0)}%`;
+            }
+        },
+        // Error callback
+        (error) => {
+            console.error('Error loading model:', error);
+            loadingDiv.innerHTML = '<div style="color: #ff6b6b;">⚠️ Model not found</div>';
+        }
+    );
+
+    // Animation loop
+    function animate() {
+        requestAnimationFrame(animate);
+        controls.update();
+        renderer.render(scene, camera);
+    }
+    animate();
+
+    // Handle resize
+    const resizeObserver = new ResizeObserver(entries => {
+        for (const entry of entries) {
+            const width = entry.contentRect.width;
+            const height = entry.contentRect.height;
+            camera.aspect = width / height;
+            camera.updateProjectionMatrix();
+            renderer.setSize(width, height);
+        }
+    });
+    resizeObserver.observe(canvas);
+}
+
+// Update initPageModels to actually load the models
+function initPageModels(pageId) {
+    console.log('Initializing models for:', pageId);
+    
+    if (pageId === 'casino') {
+        // Load casino models
+        init3DModel('casino-model-1', 'assets/models/casino/bar-counter/bar-counter.glb');
+        // Add other models when you have them:
+        // init3DModel('casino-model-2', 'assets/models/casino/slot-machine/slot-machine.glb');
+        // init3DModel('casino-model-3', 'assets/models/casino/cocktail-glass/cocktail-glass.glb');
+    }
+    // Add other pages when ready
+}
+
+// Update setViewMode to actually change the view
+function setViewMode(canvasId, mode, button) {
+    const buttons = button.parentElement.querySelectorAll('.view-btn');
+    buttons.forEach(btn => btn.classList.remove('active'));
+    button.classList.add('active');
+    
+    const viewer = viewers[canvasId];
+    if (!viewer || !viewer.model) return;
+    
+    viewer.model.traverse((child) => {
+        if (child.isMesh) {
+            switch (mode) {
+                case 'solid':
+                    child.material = new THREE.MeshStandardMaterial({
+                        color: 0x8892b0,
+                        metalness: 0.3,
+                        roughness: 0.7
+                    });
+                    break;
+                case 'wireframe':
+                    child.material = new THREE.MeshBasicMaterial({
+                        color: 0x667eea,
+                        wireframe: true
+                    });
+                    break;
+                case 'textured':
+                    const original = viewer.originalMaterials.get(child);
+                    if (original) child.material = original;
+                    break;
+            }
+        }
+    });
+}
     </script>
 </body>
 </html>
