@@ -59,7 +59,14 @@ class ModelViewer {
             });
             
             this.renderer.setPixelRatio(this.pixelRatio);
-            this.renderer.setSize(this.canvas.clientWidth, this.canvas.clientHeight);
+            // Get proper dimensions from parent container
+            const container = this.canvas.parentElement;
+            const width = container.clientWidth || container.offsetWidth || 400;
+            const height = container.clientHeight || container.offsetHeight || 400;
+            this.renderer.setSize(width, height);
+            this.canvas.style.width = width + 'px';
+            this.canvas.style.height = height + 'px';
+            console.log('Initial size set to:', width, 'x', height);
             this.renderer.shadowMap.enabled = !this.isMobile;
             this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
             this.renderer.outputEncoding = THREE.sRGBEncoding;
@@ -299,6 +306,8 @@ class ModelViewer {
                 this.scene.add(this.model);
                 console.log('Model added to scene');
                 console.log('Scene children count:', this.scene.children.length);
+                // Force a resize to ensure proper dimensions
+                this.handleResize();
                 
                 this.showLoading(false);
                 
@@ -390,18 +399,24 @@ class ModelViewer {
         });
     }
 
-    handleResize() {
-        if (!this.camera || !this.renderer || !this.canvas) return;
-        
-        const width = this.canvas.clientWidth;
-        const height = this.canvas.clientHeight;
-        
-        this.camera.aspect = width / height;
-        this.camera.updateProjectionMatrix();
-        this.renderer.setSize(width, height);
-        
-        console.log('Resized to:', width, 'x', height);
-    }
+handleResize() {
+    if (!this.camera || !this.renderer || !this.canvas) return;
+    
+    // Get the parent container dimensions instead of canvas dimensions
+    const container = this.canvas.parentElement;
+    const width = container.clientWidth || container.offsetWidth || 400;
+    const height = container.clientHeight || container.offsetHeight || 400;
+    
+    // Ensure canvas has explicit dimensions
+    this.canvas.style.width = width + 'px';
+    this.canvas.style.height = height + 'px';
+    
+    this.camera.aspect = width / height;
+    this.camera.updateProjectionMatrix();
+    this.renderer.setSize(width, height);
+    
+    console.log('Resized to:', width, 'x', height);
+}
 
     handleVisibilityChange() {
         if (document.hidden && this.animationId) {
