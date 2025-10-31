@@ -114,12 +114,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// Prevent zoom on double tap for iOS
+// Prevent zoom on double tap for iOS, while allowing taps on buttons/links
 let lastTouchEnd = 0;
 document.addEventListener('touchend', (e) => {
     const now = Date.now();
     if (now - lastTouchEnd <= 300) {
-        e.preventDefault();
+        // Check if the tap target is a button, link, or has an onclick
+        const targetElement = e.target;
+        const isInteractive = targetElement.tagName === 'BUTTON' || 
+                              targetElement.tagName === 'A' || 
+                              targetElement.hasAttribute('onclick');
+
+        if (!isInteractive) {
+            e.preventDefault(); // Only prevent default if it's NOT a button/link
+        }
     }
     lastTouchEnd = now;
 }, false);
